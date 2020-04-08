@@ -1,8 +1,15 @@
 # VInput
 
-Input component that automatically includes labels, validation, and aria descriptions for any errors.
+Input component that simplifies accessibility and validation.
 
 [Source](https://github.com/Stegosource/vuetensils/blob/master/src/components/VInput/VInput.vue)
+
+**Features:**
+
+- Enforces including labels.
+- Build in validation using [HTML5 form validation API](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation).
+- Automatic [aria-invalid](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_aria-invalid_attribute) attribute.
+- Automatic [aria-describedby](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_aria-describedby_attribute) attribute.
 
 ## Installation
 
@@ -37,7 +44,7 @@ export default {
 ```vue live
 <template>
   <form @submit.prevent class="styled">
-    <VInput v-model="name" label="Your Name:" />
+    <VInput v-model="name" label="Your Name" />
   </form>
 </template>
 
@@ -70,25 +77,25 @@ Supports all HTML [input types](https://developer.mozilla.org/en-US/docs/Web/HTM
 
 ```vue live
 <template>
-  <VInput label="text:" />
+  <VInput label="text:" name="text" />
 </template>
 ```
 
 ```vue live
 <template>
-  <VInput label="email:" type="email" />
+  <VInput label="email:" name="email" type="email" />
 </template>
 ```
 
 ```vue live
 <template>
-  <VInput label="textarea:" type="textarea" />
+  <VInput label="textarea:" name="textarea" type="textarea" />
 </template>
 ```
 
 ```vue live
 <template>
-  <VInput label="checkbox" type="checkbox" />
+  <VInput label="checkbox" name="checkbox" type="checkbox" />
 </template>
 ```
 
@@ -97,6 +104,7 @@ Supports all HTML [input types](https://developer.mozilla.org/en-US/docs/Web/HTM
   <VInput
     type="radio"
     label="radio"
+    name="radio"
     :options="['option 1', 'option 2', 'option 3', 'option 4']"
   />
 </template>
@@ -106,6 +114,7 @@ Supports all HTML [input types](https://developer.mozilla.org/en-US/docs/Web/HTM
 <template>
   <VInput
     label="select"
+    name="select"
     type="select"
     :options="['option 1', 'option 2', 'option 3', 'option 4']"
   />
@@ -117,6 +126,7 @@ Supports all HTML [input types](https://developer.mozilla.org/en-US/docs/Web/HTM
   <form @submit.prevent class="styled">
     <VInput
       label="select (multiple)"
+      name="select-multi"
       v-model="selected"
       type="select"
       :options="['option 1', 'option 2', 'option 3', 'option 4']"
@@ -135,13 +145,39 @@ export default {
 </script>
 ```
 
+## Hidden Label
+
+Sometimes you may want to hide your label and only show the input. Excluding the label causes an accessibility issue, but you can [visually hide the label text with CSS](https://a11yproject.com/posts/how-to-hide-content/). Note that you will need to add the styles to your project.
+
+```vue live
+<template>
+  <VInput
+    label="Input Label"
+    name="features"
+    :classes="{ text: 'visually-hidden' }"
+  />
+</template>
+
+<style>
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+</style>
+```
+
 ## Description
 
 If you want to add a description to your input, the best practice is to include an `aria-describedby` attribute in combination with an ID on the description element. Fortunately, with this component you can simply use the description slot.
 
 ```vue live
 <template>
-  <VInput label="Features:">
+  <VInput label="Features:" name="features">
     <template v-slot:description>
       Are there any other features you would like to see?
     </template>
@@ -157,41 +193,37 @@ Note that client-side validation is never a substitute for server-side validatio
 
 ```vue live
 <template>
-  <VInput
-    v-model="value"
-    label="test"
-    required
-    min="1"
-    max="2"
-    minlength="2"
-    maxlength="20"
-    pattern="[0-9]{4}"
-  >
-    <template v-slot:description="state">
-      <ul v-if="state.dirty && state.anyInvalid">
-        <template v-for="(isInvalid, key) in state.invalid">
-          <li v-if="key === 'required' && isInvalid" :key="key">
-            This field is required
-          </li>
-          <li v-if="key === 'minLength' && isInvalid" :key="key">
-            Must be at least 2 characters
-          </li>
-          <li v-if="key === 'pattern' && isInvalid" :key="key">
-            Must be a 4 digit number
-          </li>
+  <VForm>
+    <template #default="form">
+      <pre>{{ form }}</pre>
+
+      <VInput
+        v-model="input"
+        label="Username"
+        name="username"
+        required
+        minlength="6"
+        class="mb-3"
+      >
+        <template #description="input">
+          <pre>{{ input }}</pre>
         </template>
-      </ul>
-      <br />
-      <p>Validation state:</p>
-      <pre>{{ state }}</pre>
+      </VInput>
+
+      <label>
+        Second
+        <input name="second" required minlength="6" />
+      </label>
+
+      <VInput value="start?" name="third" label="yo" required />
     </template>
-  </VInput>
+  </VForm>
 </template>
 
 <script>
 export default {
   data: () => ({
-    value: "",
+    input: "init",
   }),
 }
 </script>

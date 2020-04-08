@@ -4,8 +4,10 @@
       'vts-input',
       `vts-input--${$attrs.type || 'text'}`,
       {
-        'vts-input--invalid': dirty && anyInvalid,
         'vts-input--required': $attrs.hasOwnProperty('required'),
+        'vts-input--invalid': !valid,
+        'vts-input--dirty': dirty,
+        'vts-input--error': error,
       },
       classes.root,
     ]"
@@ -20,18 +22,20 @@
       <label
         v-for="option in computedOptions"
         :key="option.value"
+        :for="`${id}__input`"
         :class="['vts-input__label', classes.label]"
       >
         <input
           ref="input"
-          :checked="value === option.value"
+          :checked="localValue === option.value"
           :type="$attrs.type"
           :name="option.name"
           :value="option.value"
-          :aria-describedby="(dirty && anyInvalid) && `${id}__description`"
+          :aria-invalid="!valid"
+          :aria-describedby="error && `${id}__description`"
           class="vts-input__input"
           @input="$emit('update', option.value)"
-          @blur="dirty = true"
+          @blur.once="dirty = true"
           v-on="$listeners"
         />
         <span :class="['vts-input__text', classes.text]">
@@ -40,7 +44,11 @@
       </label>
     </fieldset>
 
-    <label v-else :class="['vts-input__label', classes.label]">
+    <label
+      v-else
+      :for="`${id}__input`"
+      :class="['vts-input__label', classes.label]"
+    >
       <span
         v-if="$attrs.type !== 'checkbox'"
         :class="['vts-input__text', classes.text]"
@@ -53,18 +61,19 @@
         :id="`${id}__input`"
         ref="input"
         :name="name"
-        v-bind="$attrs"
-        :aria-describedby="(dirty && anyInvalid) && `${id}__description`"
+        :aria-invalid="!valid"
+        :aria-describedby="error && `${id}__description`"
         :class="['vts-input__input', classes.input]"
+        v-bind="$attrs"
         @input="onInput"
-        @blur="dirty = true"
+        @blur.once="dirty = true"
         v-on="$listeners"
       >
         <option
           v-for="(option, i) in computedOptions"
           :key="i"
           v-bind="option"
-          :selected="value.includes(option.value)"
+          :selected="localValue.includes(option.value)"
         >
           {{ option.label }}
         </option>
@@ -75,18 +84,18 @@
         v-else
         :id="`${id}__input`"
         ref="input"
-        :name="name"
-        :value.prop="value"
+        :value="localValue"
         v-bind="$attrs"
-        :aria-describedby="(dirty && anyInvalid) && `${id}__description`"
+        :aria-invalid="!valid"
+        :aria-describedby="error && `${id}__description`"
         :class="['vts-input__input', classes.input]"
-        :checked="$attrs.type === 'checkbox' && value === true"
+        :checked="$attrs.type === 'checkbox' && localValue === true"
         @input="onInput"
-        @blur="dirty = true"
+        @blur.once.once="dirty = true"
         v-on="$listeners"
       >
         <template v-if="tag === 'textarea'">
-          {{ value }}
+          {{ localValue }}
         </template>
       </component>
       <span
@@ -104,7 +113,10 @@
       role="alert"
     >
       <!-- @slot Scoped slot for the input description. Provides the validation state. -->
-      <slot name="description" v-bind="{ dirty, anyInvalid, invalid }" />
+      <slot
+        name="description"
+        v-bind="{ valid, dirty, error, invalid, anyInvalid }"
+      />
     </div>
   </div>
 </template>
@@ -128,7 +140,7 @@ export default {
      */
     label: {
       type: String,
-      default: "",
+      required: true,
     },
 
     /**
@@ -153,11 +165,15 @@ export default {
     },
   },
 
-  data: () => ({
-    dirty: false,
-    anyInvalid: false,
-    invalid: {},
-  }),
+  data() {
+    return {
+      localValue: this.value, // Required for weird bug when nested in VForm
+      valid: true,
+      anyInvalid: false, // TODO: deprecate
+      dirty: false,
+      invalid: {},
+    }
+  },
 
   computed: {
     tag() {
@@ -187,15 +203,20 @@ export default {
       const { multiple } = this.$attrs
       return multiple != null && multiple != "false"
     },
+
+    error() {
+      return !this.valid && this.dirty
+    },
   },
 
   watch: {
-    value: {
+    localValue: {
       handler: "validate",
     },
   },
 
   created() {
+    // Might cause an issue with SSR
     const { id, name } = this.$attrs
     this.id = id ? id : `vts-${randomString(4)}`
     this.name = name ? name : this.id
@@ -239,14 +260,17 @@ export default {
 
       const { validity } = input
 
-      this.anyInvalid = !validity.valid
+      // https://logaretm.com/blog/2019-05-03-html-aided-vuejs-form-validation/
+
+      this.anyInvalid = !validity.valid // TODO: deprecate
+      this.valid = validity.valid
       this.invalid = {
+        type: validity.typeMismatch,
         required: validity.valueMissing,
-        minLength: validity.tooShort,
-        maxLength: validity.tooLong,
+        minlength: validity.tooShort,
+        maxlength: validity.tooLong,
         min: validity.rangeOverflow,
         max: validity.rangeUnderflow,
-        type: validity.typeMismatch,
         pattern: validity.patternMismatch,
       }
     },

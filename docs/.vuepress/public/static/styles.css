@@ -16,11 +16,25 @@ body .live-preview pre {
   background: initial;
 }
 
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  width: 1px;
+  height: 1px;
+  white-space: nowrap;
+}
+
+.text-center {
+  text-align: center;
+}
+
 .bg-white {
   background-color: #fff;
 }
 
-.bg-black-alpha .vts-dialog {
+.bg-black-alpha {
   background: rgba(0, 0, 0, 0.2);
 }
 
@@ -127,6 +141,30 @@ body .live-preview pre {
   border-radius: 0 0 5px 5px;
   padding: 10px;
   background-color: #fff;
+}
+
+.styled.vts-form input {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.styled.vts-form input,
+.styled.vts-form button {
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.styled.vts-form input {
+  border: 1px solid darkgray;
+}
+
+.styled.vts-form button {
+  border: 0;
+}
+
+.styled.vts-form:not(.vts-form--invalid) button {
+  color: #fff;
+  background: seagreen;
 }
 
 .styled .vts-file__dropzone {

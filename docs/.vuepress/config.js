@@ -1,23 +1,15 @@
-// const fs = require("fs")
+const fs = require("fs")
 const path = require("path")
 // const vueDocs = require("vue-docgen-api")
 
-// var dirpath = "./docs"
-
-// generate sidenav order by update time
-// var sb = fs
-//   .readdirSync(dirpath)
+// const components = fs
+//   .readdirSync("./docs/components")
 //   .filter(f => {
 //     return f.match(/\.(md)$/i) && f !== "README.md"
 //   })
 //   .map(f => {
-//     return {
-//       path: "/" + f,
-//       mtime: fs.statSync(dirpath + "/" + f).mtime,
-//     }
+//     return `/components/${f.slice(0, -3)}`
 //   })
-//   .sort((a, b) => a.mtime - b.mtime)
-//   .map(f => f.path)
 
 // var componentInfo = vueDocs.parse(
 //   path.join(__dirname, "../../src/components/VAlert/VAlert.vue")
@@ -48,6 +40,7 @@ module.exports = {
           "/components/VDrawer",
           "/components/VDropdown",
           "/components/VFile",
+          "/components/VForm",
           "/components/VImg",
           "/components/VInput",
           "/components/VIntersect",

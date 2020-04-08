@@ -72,6 +72,12 @@ export default {
           this.$emit("resolve", results)
         })
         .catch(error => {
+          if (error instanceof Error) {
+            error = {
+              name: error.name,
+              message: error.message,
+            }
+          }
           this.error = error
           /**
            * Fired after promise has rejected with the rejected error.
@@ -109,14 +115,14 @@ export default {
     }
 
     if (!pending && error) {
-      if (!rejectedSlot) return
-
-      return safeSlot(h, rejectedSlot(error))
+      if (rejectedSlot) {
+        return safeSlot(h, rejectedSlot(error))
+      }
     }
 
     const results = data === undefined ? defaultData : data
 
-    if (!pending && resolvedSlot) {
+    if (!pending && !error && resolvedSlot) {
       return safeSlot(h, resolvedSlot(results))
     }
 
